@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<!-- DESIGN RATIONALE:
+     Extending ironveil-operate.html design system directly.
+     Palette: cyan (#00e5ff) primary + pink (#ff4081) accent — the ironveil identity.
+     This is the workstation hardening writeup, not a command centre. Sections reframed
+     to present the build as a portfolio artefact: threat model, components, architecture,
+     results, skills demonstrated. MANUAL INPUT blocks preserved as flagged pending items.
+     Scanline overlay retained. Share Tech Mono for all monospace/label/identifier elements,
+     Barlow 300 for body. Footer: project name + 2026-06-10.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IRONVEIL — Hardened Workstation Build</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #090d12;
+    --surface: #0d1520;
+    --surface2: #101a28;
+    --border: #1a2a3a;
+    --border-bright: #2a3f55;
+    --accent: #00e5ff;
+    --accent2: #ff4081;
+    --warn: #ffaa00;
+    --text: #c8d8e8;
+    --text-bright: #e8f2fb;
+    --muted: #4a6a7a;
+    --code-bg: #060a0f;
+    --green: #00ff88;
+    --done: #00ff88;
+    --pending: #ffaa00;
+    --next: #00e5ff;
+    --blocked: #ff4081;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 3rem 2rem 6rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+  }
+
+  .sys-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+    opacity: 0.8;
+  }
+
+  h1 {
+    font-size: 2.4rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #fff;
+    text-transform: uppercase;
+    line-height: 1.1;
+  }
+
+  h1 .slash { color: var(--accent2); font-weight: 300; margin: 0 0.25em; }
+
+  .subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.75rem;
+    letter-spacing: 0.1em;
+  }
+
+  .corner-tag {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-align: right;
+    line-height: 1.8;
+  }
+  .corner-tag span { display: block; }
+
+  .section-break {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 3rem 0 1.5rem;
+  }
+  .section-break span {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .section-break::before, .section-break::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .info {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 0.9rem 1.25rem;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+    color: var(--text);
+  }
+  .info .info-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+
+  .note {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--warn);
+    padding: 0.9rem 1.25rem;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+    color: var(--text);
+  }
+  .note .note-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--warn);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+
+  .warn-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--blocked);
+    padding: 0.9rem 1.25rem;
+    margin: 1rem 0;
+    font-size: 0.82rem;
+    color: var(--text);
+  }
+  .warn-block .warn-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--blocked);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+
+  .info code, .note code, .warn-block code {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--accent);
+    background: rgba(0,229,255,0.06);
+    padding: 0.1em 0.4em;
+  }
+
+  /* Data tables */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    margin: 1rem 0;
+  }
+  .data-table th {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0.5rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-bright);
+    background: var(--code-bg);
+  }
+  .data-table td {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(0,229,255,0.025); }
+  .data-table td:first-child {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+
+  /* Status rows */
+  .status-block { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; }
+  .status-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.75rem 1.1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .status-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding: 0.2em 0.6em;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+  }
+  .tag-done { color: var(--done); border: 1px solid var(--done); }
+  .tag-pending { color: var(--pending); border: 1px solid var(--pending); }
+  .tag-blocked { color: var(--blocked); border: 1px solid var(--blocked); }
+  .status-text { font-size: 0.85rem; color: var(--text); }
+  .status-text strong { color: var(--text-bright); font-weight: 600; }
+
+  /* Architecture layers */
+  .layer-stack { display: flex; flex-direction: column; gap: 1px; background: var(--border-bright); margin: 1rem 0; border: 1px solid var(--border-bright); }
+  .layer-row {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr 1fr;
+    background: var(--surface);
+  }
+  .layer-row:hover { background: var(--surface2); }
+  .layer-name {
+    padding: 0.75rem 1rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-right: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+  }
+  .layer-body {
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+    color: var(--text-bright);
+    border-right: 1px solid var(--border);
+  }
+  .layer-threat {
+    padding: 0.75rem 1rem;
+    font-size: 0.76rem;
+    color: var(--muted);
+  }
+
+  /* Skills grid */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border-bright);
+    border: 1px solid var(--border-bright);
+    margin: 1rem 0;
+  }
+  .skill-cell {
+    background: var(--surface);
+    padding: 0.9rem 1.1rem;
+    font-size: 0.82rem;
+  }
+  .skill-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+  .skill-cell p { color: var(--text); line-height: 1.55; }
+
+  /* Code block */
+  .cmd-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    padding: 0.9rem 1.25rem;
+    margin: 0.75rem 0;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.76rem;
+    color: var(--accent);
+    letter-spacing: 0.03em;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    display: flex;
+    justify-content: space-between;
+    text-transform: uppercase;
+  }
+
+  p { margin-bottom: 0.8rem; }
+  p:last-child { margin-bottom: 0; }
+
+  @media (max-width: 640px) {
+    .skills-grid { grid-template-columns: 1fr; }
+    .layer-row { grid-template-columns: 1fr; }
+    .layer-name, .layer-body { border-right: none; border-bottom: 1px solid var(--border); }
+    .layer-threat { border: none; }
+    footer { flex-direction: column; gap: 0.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="sys-label">// HARDENED WORKSTATION — PORTFOLIO BUILD</div>
+    <h1>Iron<span class="slash">//</span>veil</h1>
+    <div class="subtitle">FEDORA WORKSTATION · LUKS2 · FIDO2 · WIREGUARD · DRACUT-SSHD · LIVING BUILD</div>
+    <div class="corner-tag">
+      <span>STATUS — OPERATIONAL</span>
+      <span>rev 2026-06-10</span>
+    </div>
+  </header>
+
+  <div class="info">
+    <span class="info-label">Overview</span>
+    Hardened Fedora workstation built to a defence-in-depth security model. LUKS2 full-disk
+    encryption requires physical hardware key presence for unlock. If the key is unavailable,
+    the machine can still be unlocked remotely over SSH from a GrapheneOS mobile platform —
+    without the initramfs ever trusting a password over the network. WireGuard routes all
+    external traffic; AdGuard Home intercepts all DNS before it leaves the host.
+  </div>
+
+  <div class="note">
+    <span class="note-label">Living Build</span>
+    This is an actively maintained workstation build, not a static project. Sections marked
+    MANUAL INPUT REQUIRED require values captured from the running machine and will be updated
+    in a future session.
+  </div>
+
+  <div class="section-break"><span>Threat Model</span></div>
+
+  <p>The build addresses a specific threat model for a security practitioner whose workstation
+  stores research, tooling, and keys worth protecting against physical access, supply-chain
+  key compromise, and remote theft. Each component was chosen because it eliminates a
+  specific attack path — not because it adds capability.</p>
+
+  <table class="data-table">
+    <tr><th>Threat</th><th>Control</th></tr>
+    <tr><td>Offline disk clone and brute-force</td><td>LUKS2 with Argon2id KDF; hardware key required to unlock</td></tr>
+    <tr><td>Primary hardware key lost or seized</td><td>NK#2 backup keyslot; passphrase emergency fallback</td></tr>
+    <tr><td>Hardware key cloned without touch</td><td>Touch-only FIDO2 enrollment; Nitrokey 3A NFC requires physical presence</td></tr>
+    <tr><td>Remote workstation inaccessible for unlock</td><td>dracut-sshd: SSH into initramfs from GrapheneOS</td></tr>
+    <tr><td>DNS traffic leakage and exfiltration</td><td>AdGuard Home filtering; systemd-resolved bound to loopback</td></tr>
+    <tr><td>Traffic interception and geolocation</td><td>WireGuard VPN on all external traffic with kill-switch</td></tr>
+  </table>
+
+  <div class="section-break"><span>Components</span></div>
+
+  <div class="info">
+    <span class="info-label">LUKS2 Full-Disk Encryption</span>
+    Encrypted volume: <code>/dev/sda3</code>. Three keyslots: Slot 0 (passphrase — emergency
+    fallback only, stored offline), Slot 1 (Nitrokey NK#1 — daily driver, touch required),
+    Slot 2 (Nitrokey NK#2 — kept offline, activated if NK#1 is lost). LUKS2 uses Argon2id
+    as the key derivation function. Hardware key slots enroll FIDO2 credentials — the
+    passphrase is never sent to the key.
+  </div>
+
+  <div class="info">
+    <span class="info-label">Nitrokey 3A NFC — FIDO2 Hardware Key</span>
+    Hardware: Nitrokey 3A NFC · Firmware: 1.8.3 · Enrollment mode: touch-only — physical
+    presence required for every unlock event. clientPin is not supported on this firmware
+    version; reliance is on touch confirmation. The touch-only constraint is intentional:
+    a key activatable remotely would defeat the physical-presence guarantee.
+  </div>
+
+  <div class="info">
+    <span class="info-label">dracut-sshd — Remote Unlock via SSH</span>
+    The initramfs is built with <code>dracut-sshd</code>, which starts a minimal SSH daemon
+    at pre-boot. Unlock flow: machine reaches initramfs SSH listener → GrapheneOS (Termux)
+    connects via <code>ssh unlock@$IRONVEIL_IP</code> → Termux ed25519 public key (baked
+    into initramfs at build time) authenticates → authenticated session triggers
+    <code>systemd-cryptsetup@sda3</code> → volume unlocks, boot continues. The initramfs
+    SSH host key is pinned on the GrapheneOS client to prevent MITM substitution.
+  </div>
+
+  <div class="info">
+    <span class="info-label">WireGuard VPN — wg-SE-RO-1</span>
+    Interface: <code>wg-SE-RO-1</code> (named-tunnel model encoding endpoint region).
+    Managed by NetworkManager as a first-class network connection. All external traffic
+    routed through the tunnel. Kill-switch rule drops traffic if the interface drops.
+    The rename from <code>wg0</code> reflects a move toward multi-tunnel readability.
+  </div>
+
+  <div class="info">
+    <span class="info-label">AdGuard Home DNS Filtering</span>
+    Upstream DNS: WireGuard peer at <code>10.2.0.1</code> — DNS queries traverse the
+    encrypted tunnel before reaching a resolver. Listener: <code>127.0.0.1:53</code>.
+    <code>systemd-resolved</code> configured to forward all queries to <code>127.0.0.1</code>.
+    DNS chain: application → systemd-resolved (loopback) → AdGuard Home → WireGuard →
+    upstream resolver. External observer sees only WireGuard-encrypted traffic.
+  </div>
+
+  <div class="info">
+    <span class="info-label">OpenRGB — Peripheral Configuration</span>
+    Razer Huntsman V2 (keyboard), Razer Basilisk (mouse), 6× Corsair fans via Commander Pro.
+    OpenRGB provides vendor-agnostic RGB control without vendor cloud daemons (Razer Synapse,
+    iCUE). No vendor software installed. Commander Pro detected as USB HID device.
+  </div>
+
+  <div class="section-break"><span>Security Architecture — Defence in Depth</span></div>
+
+  <div class="layer-stack">
+    <div class="layer-row">
+      <div class="layer-name">Physical</div>
+      <div class="layer-body">Nitrokey 3A NFC FIDO2, touch-only enrollment (fw 1.8.3, no clientPin)</div>
+      <div class="layer-threat">Remote/unattended hardware-key activation</div>
+    </div>
+    <div class="layer-row">
+      <div class="layer-name">Disk</div>
+      <div class="layer-body">LUKS2 volume on <code style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent)">/dev/sda3</code> with Argon2id KDF</div>
+      <div class="layer-threat">Offline disk clone and brute-force key derivation</div>
+    </div>
+    <div class="layer-row">
+      <div class="layer-name">Boot</div>
+      <div class="layer-body">dracut-sshd pre-boot SSH with pinned ed25519 host key</div>
+      <div class="layer-threat">Unattended unlock; MITM key substitution during unlock</div>
+    </div>
+    <div class="layer-row">
+      <div class="layer-name">Key Custody</div>
+      <div class="layer-body">NK#1 primary, NK#2 offline backup, offline emergency passphrase</div>
+      <div class="layer-threat">Single point of key failure; primary key loss or seizure</div>
+    </div>
+    <div class="layer-row">
+      <div class="layer-name">Network</div>
+      <div class="layer-body">WireGuard <code style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent)">wg-SE-RO-1</code> (NetworkManager) with kill-switch</div>
+      <div class="layer-threat">Traffic interception, geolocation, leakage if tunnel drops</div>
+    </div>
+    <div class="layer-row">
+      <div class="layer-name">DNS</div>
+      <div class="layer-body">AdGuard Home on <code style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent)">127.0.0.1:53</code> + systemd-resolved loopback; upstream via <code style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent)">10.2.0.1</code> over WireGuard</div>
+      <div class="layer-threat">Plaintext DNS leakage; tracker and malicious domain resolution</div>
+    </div>
+  </div>
+
+  <div class="section-break"><span>Component Status</span></div>
+
+  <div class="status-block">
+    <div class="status-row">
+      <span class="status-tag tag-done">Operational</span>
+      <div class="status-text"><strong>LUKS2 Argon2id</strong> — all three keyslots active</div>
+    </div>
+    <div class="status-row">
+      <span class="status-tag tag-done">Operational</span>
+      <div class="status-text"><strong>Nitrokey NK#1 FIDO2 enrollment</strong> — firmware 1.8.3, touch-only</div>
+    </div>
+    <div class="status-row">
+      <span class="status-tag tag-done">Enrolled</span>
+      <div class="status-text"><strong>Nitrokey NK#2 backup keyslot</strong> — stored offline</div>
+    </div>
+    <div class="status-row">
+      <span class="status-tag tag-done">Operational</span>
+      <div class="status-text"><strong>dracut-sshd remote unlock</strong> — Termux ed25519 key in initramfs</div>
+    </div>
+    <div class="status-row">
+      <span class="status-tag tag-done">Operational</span>
+      <div class="status-text"><strong>WireGuard wg-SE-RO-1</strong> — NetworkManager-managed</div>
+    </div>
+    <div class="status-row">
+      <span class="status-tag tag-done">Operational</span>
+      <div class="status-text"><strong>AdGuard Home</strong> — upstream via 10.2.0.1</div>
+    </div>
+    <div class="status-row">
+      <span class="status-tag tag-done">Operational</span>
+      <div class="status-text"><strong>systemd-resolved → 127.0.0.1</strong></div>
+    </div>
+    <div class="status-row">
+      <span class="status-tag tag-done">Operational</span>
+      <div class="status-text"><strong>OpenRGB (Razer + Corsair)</strong> — vendor daemons absent</div>
+    </div>
+    <div class="status-row">
+      <span class="status-tag tag-pending">Manual Input</span>
+      <div class="status-text"><strong>LUKS2 exact cipher + key size</strong> — run: <code>sudo cryptsetup luksDump /dev/sda3</code></div>
+    </div>
+    <div class="status-row">
+      <span class="status-tag tag-pending">Manual Input</span>
+      <div class="status-text"><strong>Fedora release + kernel</strong> — run: <code>cat /etc/fedora-release &amp;&amp; uname -r</code></div>
+    </div>
+    <div class="status-row">
+      <span class="status-tag tag-pending">Manual Input</span>
+      <div class="status-text"><strong>SELinux/seccomp status</strong> — run: <code>getenforce &amp;&amp; sestatus</code></div>
+    </div>
+    <div class="status-row">
+      <span class="status-tag tag-pending">Manual Input</span>
+      <div class="status-text"><strong>LUKS2 unlock-latency benchmark</strong> — measure hardware key vs passphrase unlock time</div>
+    </div>
+  </div>
+
+  <div class="section-break"><span>Skills Demonstrated</span></div>
+
+  <div class="skills-grid">
+    <div class="skill-cell">
+      <span class="skill-label">Linux Hardening</span>
+      <p>LUKS2 full-disk encryption with keyslot management and Argon2id KDF configuration.</p>
+    </div>
+    <div class="skill-cell">
+      <span class="skill-label">FIDO2 / Hardware Key Integration</span>
+      <p>Nitrokey 3A NFC enrolled as LUKS2 keyslot with touch-only enforcement; CTAP2 credential flow.</p>
+    </div>
+    <div class="skill-cell">
+      <span class="skill-label">Initramfs Engineering</span>
+      <p>dracut-sshd configured for pre-boot SSH with pinned ed25519 key; key rotation procedure documented.</p>
+    </div>
+    <div class="skill-cell">
+      <span class="skill-label">Network Security</span>
+      <p>WireGuard VPN with kill-switch via NetworkManager; named-tunnel model for multi-tunnel readability.</p>
+    </div>
+    <div class="skill-cell">
+      <span class="skill-label">DNS Security</span>
+      <p>AdGuard Home + systemd-resolved; DNS-over-WireGuard; loopback binding preventing unfiltered queries.</p>
+    </div>
+    <div class="skill-cell">
+      <span class="skill-label">Defence in Depth</span>
+      <p>Each threat mapped to a compensating control across physical, disk, boot, network, and DNS layers.</p>
+    </div>
+    <div class="skill-cell">
+      <span class="skill-label">Operational Security</span>
+      <p>Vendor cloud daemons eliminated; RGB peripherals managed via OpenRGB without telemetry.</p>
+    </div>
+    <div class="skill-cell">
+      <span class="skill-label">Remote Operations</span>
+      <p>SSH-based unlock from GrapheneOS; IRONVEIL ↔ NULLBYTE integration for remote boot without physical presence.</p>
+    </div>
+  </div>
+
+  <div class="section-break"><span>Repository</span></div>
+
+  <div class="info">
+    <span class="info-label">GitHub</span>
+    Full build documentation, hardening notes, and research references:
+    <code>github.com/rootdrift/ironveil</code>
+  </div>
+
+  <footer>
+    <span>ironveil — hardened fedora workstation</span>
+    <span>rev 2026-06-10</span>
+  </footer>
+
+</div>
+</body>
+</html>
