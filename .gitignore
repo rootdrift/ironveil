@@ -1,0 +1,46 @@
+# ironveil — exclude credentials, key material, and sensitive configs
+# Only documentation (Markdown) is tracked in this repository.
+
+# Key material and credentials
+*.key
+*.pem
+*.crt
+*.gpg
+*.asc
+id_*
+*_rsa
+*_rsa.pub
+*_ed25519
+*_ed25519.pub
+authorized_keys
+known_hosts
+*.kdbx
+.env
+secrets*
+passphrase*
+
+# LUKS / cryptsetup artefacts
+*.luks
+*luksHeader*
+*header.img
+*.img
+
+# WireGuard configs (contain private keys)
+wg*.conf
+*.wg
+
+# AdGuard Home config (may contain upstream / auth detail)
+AdGuardHome.yaml
+
+# dracut / initramfs build artefacts
+*.cpio
+*.cpio.gz
+initramfs*
+
+# OpenRGB exported profiles (machine-specific)
+*.orp
+
+# OS / editor cruft
+.DS_Store
+*.swp
+*~
