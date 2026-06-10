@@ -357,6 +357,79 @@
     text-transform: uppercase;
   }
 
+  /* Interactive hardening checklist */
+  .checklist-hint {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0.5rem 0 0.75rem;
+  }
+  .ctrl-list { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; }
+  .ctrl-item { background: var(--surface); border: 1px solid var(--border); }
+  .ctrl-item.open { border-color: var(--border-bright); }
+  .ctrl-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    width: 100%;
+    padding: 0.75rem 1.1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+    font-weight: 300;
+    text-align: left;
+    color: var(--text);
+    font-size: 0.85rem;
+    line-height: 1.7;
+  }
+  .ctrl-head:hover { background: var(--surface2); }
+  .ctrl-head .status-tag { margin-top: 0.15rem; }
+  .ctrl-name { flex: 1; }
+  .ctrl-name strong { color: var(--text-bright); font-weight: 600; }
+  .ctrl-name code {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--accent);
+    background: rgba(0,229,255,0.06);
+    padding: 0.1em 0.4em;
+  }
+  .ctrl-chev {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--muted);
+    transition: transform 0.2s;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+  }
+  .ctrl-item.open .ctrl-chev { transform: rotate(90deg); color: var(--accent); }
+  .ctrl-body {
+    display: none;
+    padding: 0.7rem 1.1rem 0.95rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.82rem;
+    color: var(--text);
+  }
+  .ctrl-item.open .ctrl-body { display: block; }
+  .ctrl-body .protects {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+  .ctrl-body .protects.pending { color: var(--pending); }
+  .ctrl-body code {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.76rem;
+    color: var(--accent);
+    background: rgba(0,229,255,0.06);
+    padding: 0.1em 0.4em;
+  }
+
   p { margin-bottom: 0.8rem; }
   p:last-child { margin-bottom: 0; }
 
@@ -587,54 +660,140 @@
 
   <div class="section-break"><span>Component Status</span></div>
 
-  <div class="status-block">
-    <div class="status-row">
-      <span class="status-tag tag-done">Operational</span>
-      <div class="status-text"><strong>LUKS2 Argon2id</strong> — all three keyslots active</div>
+  <p class="checklist-hint">// Interactive &mdash; click any control to see what it protects against</p>
+
+  <div class="ctrl-list">
+    <div class="ctrl-item">
+      <button class="ctrl-head" aria-expanded="false">
+        <span class="status-tag tag-done">Operational</span>
+        <span class="ctrl-name"><strong>LUKS2 Argon2id full-disk encryption</strong> &mdash; all three keyslots active</span>
+        <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
+      </button>
+      <div class="ctrl-body">
+        <span class="protects">Protects against</span>
+        <p>Offline disk clone and brute-force key derivation. Argon2id is a memory-hard KDF, raising the cost of GPU/ASIC-accelerated guessing. Keyslot custody removes any single point of key failure: Slot 0 emergency passphrase stored offline, Slot 1 NK#1 daily driver, Slot 2 NK#2 offline backup.</p>
+      </div>
     </div>
-    <div class="status-row">
-      <span class="status-tag tag-done">Operational</span>
-      <div class="status-text"><strong>Nitrokey NK#1 FIDO2 enrollment</strong> — firmware 1.8.3, touch-only</div>
+    <div class="ctrl-item">
+      <button class="ctrl-head" aria-expanded="false">
+        <span class="status-tag tag-done">Operational</span>
+        <span class="ctrl-name"><strong>Nitrokey NK#1 FIDO2 enrollment</strong> &mdash; firmware 1.8.3, touch-only</span>
+        <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
+      </button>
+      <div class="ctrl-body">
+        <span class="protects">Protects against</span>
+        <p>Hardware-key activation without physical presence. Touch confirmation is required for every unlock event. clientPin is not supported on this firmware version, so reliance is deliberately on physical touch &mdash; a key that could be activated remotely would defeat the physical-presence guarantee.</p>
+      </div>
     </div>
-    <div class="status-row">
-      <span class="status-tag tag-done">Enrolled</span>
-      <div class="status-text"><strong>Nitrokey NK#2 backup keyslot</strong> — stored offline</div>
+    <div class="ctrl-item">
+      <button class="ctrl-head" aria-expanded="false">
+        <span class="status-tag tag-done">Enrolled</span>
+        <span class="ctrl-name"><strong>Nitrokey NK#2 backup keyslot</strong> &mdash; stored offline</span>
+        <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
+      </button>
+      <div class="ctrl-body">
+        <span class="protects">Protects against</span>
+        <p>Loss or seizure of the primary hardware key. NK#2 is enrolled in its own keyslot but kept offline, activated only if NK#1 becomes unavailable.</p>
+      </div>
     </div>
-    <div class="status-row">
-      <span class="status-tag tag-done">Operational</span>
-      <div class="status-text"><strong>dracut-sshd remote unlock</strong> — Termux ed25519 key in initramfs</div>
+    <div class="ctrl-item">
+      <button class="ctrl-head" aria-expanded="false">
+        <span class="status-tag tag-done">Operational</span>
+        <span class="ctrl-name"><strong>dracut-sshd remote unlock</strong> &mdash; Termux ed25519 key in initramfs</span>
+        <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
+      </button>
+      <div class="ctrl-body">
+        <span class="protects">Protects against</span>
+        <p>A remote or headless machine being impossible to unlock without physical presence &mdash; and MITM key substitution during the unlock: the initramfs SSH host key is pinned on the GrapheneOS client, and the volume passphrase is never sent over the network; the authenticated session answers the unlock prompt via <code>systemd-tty-ask-password-agent</code>.</p>
+      </div>
     </div>
-    <div class="status-row">
-      <span class="status-tag tag-done">Operational</span>
-      <div class="status-text"><strong>WireGuard wg-SE-RO-1</strong> — NetworkManager-managed</div>
+    <div class="ctrl-item">
+      <button class="ctrl-head" aria-expanded="false">
+        <span class="status-tag tag-done">Operational</span>
+        <span class="ctrl-name"><strong>WireGuard wg-SE-RO-1</strong> &mdash; NetworkManager-managed</span>
+        <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
+      </button>
+      <div class="ctrl-body">
+        <span class="protects">Protects against</span>
+        <p>Traffic interception and geolocation. All external traffic is routed through the tunnel; the kill-switch drops traffic if the interface drops rather than failing open.</p>
+      </div>
     </div>
-    <div class="status-row">
-      <span class="status-tag tag-done">Operational</span>
-      <div class="status-text"><strong>AdGuard Home</strong> — upstream via 10.2.0.1</div>
+    <div class="ctrl-item">
+      <button class="ctrl-head" aria-expanded="false">
+        <span class="status-tag tag-done">Operational</span>
+        <span class="ctrl-name"><strong>AdGuard Home DNS filtering</strong> &mdash; upstream via 10.2.0.1</span>
+        <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
+      </button>
+      <div class="ctrl-body">
+        <span class="protects">Protects against</span>
+        <p>Plaintext DNS leakage and tracker / malicious-domain resolution. Queries traverse the WireGuard tunnel to the upstream resolver &mdash; an external observer sees only encrypted tunnel traffic.</p>
+      </div>
     </div>
-    <div class="status-row">
-      <span class="status-tag tag-done">Operational</span>
-      <div class="status-text"><strong>systemd-resolved → 127.0.0.1</strong></div>
+    <div class="ctrl-item">
+      <button class="ctrl-head" aria-expanded="false">
+        <span class="status-tag tag-done">Operational</span>
+        <span class="ctrl-name"><strong>systemd-resolved &rarr; 127.0.0.1</strong> loopback binding</span>
+        <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
+      </button>
+      <div class="ctrl-body">
+        <span class="protects">Protects against</span>
+        <p>Applications bypassing the DNS filter. All system resolution is forwarded to the local AdGuard Home listener, so no query leaves the host unfiltered.</p>
+      </div>
     </div>
-    <div class="status-row">
-      <span class="status-tag tag-done">Operational</span>
-      <div class="status-text"><strong>OpenRGB (Razer + Corsair)</strong> — vendor daemons absent</div>
+    <div class="ctrl-item">
+      <button class="ctrl-head" aria-expanded="false">
+        <span class="status-tag tag-done">Operational</span>
+        <span class="ctrl-name"><strong>OpenRGB (Razer + Corsair)</strong> &mdash; vendor daemons absent</span>
+        <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
+      </button>
+      <div class="ctrl-body">
+        <span class="protects">Protects against</span>
+        <p>Vendor cloud-daemon telemetry and unnecessary supply-chain surface: Razer Synapse and iCUE are not installed; peripherals are managed locally as USB HID devices.</p>
+      </div>
     </div>
-    <div class="status-row">
-      <span class="status-tag tag-pending">Manual Input</span>
-      <div class="status-text"><strong>LUKS2 exact cipher + key size</strong> — run: <code>sudo cryptsetup luksDump /dev/sda3</code></div>
+    <div class="ctrl-item">
+      <button class="ctrl-head" aria-expanded="false">
+        <span class="status-tag tag-pending">Manual Input</span>
+        <span class="ctrl-name"><strong>LUKS2 exact cipher + key size</strong> &mdash; run: <code>sudo cryptsetup luksDump /dev/sda3</code></span>
+        <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
+      </button>
+      <div class="ctrl-body">
+        <span class="protects pending">Pending &mdash; to resolve</span>
+        <p>Value must be read from the running machine and will be published once captured. An honest gap beats invented completeness.</p>
+      </div>
     </div>
-    <div class="status-row">
-      <span class="status-tag tag-pending">Manual Input</span>
-      <div class="status-text"><strong>Fedora release + kernel</strong> — run: <code>cat /etc/fedora-release &amp;&amp; uname -r</code></div>
+    <div class="ctrl-item">
+      <button class="ctrl-head" aria-expanded="false">
+        <span class="status-tag tag-pending">Manual Input</span>
+        <span class="ctrl-name"><strong>Fedora release + kernel</strong> &mdash; run: <code>cat /etc/fedora-release &amp;&amp; uname -r</code></span>
+        <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
+      </button>
+      <div class="ctrl-body">
+        <span class="protects pending">Pending &mdash; to resolve</span>
+        <p>Captured from the running machine in a hardware session; recorded here once verified.</p>
+      </div>
     </div>
-    <div class="status-row">
-      <span class="status-tag tag-pending">Manual Input</span>
-      <div class="status-text"><strong>SELinux/seccomp status</strong> — run: <code>getenforce &amp;&amp; sestatus</code></div>
+    <div class="ctrl-item">
+      <button class="ctrl-head" aria-expanded="false">
+        <span class="status-tag tag-pending">Manual Input</span>
+        <span class="ctrl-name"><strong>SELinux/seccomp status</strong> &mdash; run: <code>getenforce &amp;&amp; sestatus</code></span>
+        <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
+      </button>
+      <div class="ctrl-body">
+        <span class="protects pending">Pending &mdash; to resolve</span>
+        <p>Enforcement state is reported only as measured on the host, never assumed.</p>
+      </div>
     </div>
-    <div class="status-row">
-      <span class="status-tag tag-pending">Manual Input</span>
-      <div class="status-text"><strong>LUKS2 unlock-latency benchmark</strong> — measure hardware key vs passphrase unlock time</div>
+    <div class="ctrl-item">
+      <button class="ctrl-head" aria-expanded="false">
+        <span class="status-tag tag-pending">Manual Input</span>
+        <span class="ctrl-name"><strong>LUKS2 unlock-latency benchmark</strong> &mdash; hardware key vs passphrase unlock time</span>
+        <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
+      </button>
+      <div class="ctrl-body">
+        <span class="protects pending">Pending &mdash; to resolve</span>
+        <p>A usability data point for the hardware-key decision: to be measured, not estimated.</p>
+      </div>
     </div>
   </div>
 
@@ -725,6 +884,16 @@
   t.addEventListener('click', function () {
     var open = l.classList.toggle('open');
     t.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+})();
+</script>
+<script>
+(function () {
+  document.querySelectorAll('.ctrl-head').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var open = btn.parentElement.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
   });
 })();
 </script>
