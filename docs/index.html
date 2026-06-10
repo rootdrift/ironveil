@@ -433,7 +433,13 @@
   p { margin-bottom: 0.8rem; }
   p:last-child { margin-bottom: 0; }
 
+  /* Mobile: tables scroll horizontally instead of breaking layout */
+  .table-scroll { overflow-x: auto; margin: 1rem 0; }
+  .table-scroll > table { margin: 0; min-width: 520px; }
+
   @media (max-width: 640px) {
+    .corner-tag { position: static; text-align: left; margin-bottom: 1rem; line-height: 1.7; }
+    .corner-tag span { display: inline-block; margin-right: 1.2rem; }
     .skills-grid { grid-template-columns: 1fr; }
     .layer-row { grid-template-columns: 1fr; }
     .layer-name, .layer-body { border-right: none; border-bottom: 1px solid var(--border); }
@@ -509,6 +515,11 @@
   .footer-nav a { color: var(--muted); text-decoration: none; }
   .footer-nav a:hover { color: var(--accent); }
   .footer-nav .fsep { color: var(--border-bright); }
+
+  @media (max-width: 420px) {
+    h1 { font-size: 1.8rem; }
+    .container { padding-left: 1.25rem; padding-right: 1.25rem; }
+  }
 </style>
 </head>
 <body>
@@ -560,7 +571,7 @@
   key compromise, and remote theft. Each component was chosen because it eliminates a
   specific attack path — not because it adds capability.</p>
 
-  <table class="data-table">
+  <div class="table-scroll"><table class="data-table">
     <tr><th>Threat</th><th>Control</th></tr>
     <tr><td>Offline disk clone and brute-force</td><td>LUKS2 with Argon2id KDF; hardware key required to unlock</td></tr>
     <tr><td>Primary hardware key lost or seized</td><td>NK#2 backup keyslot; passphrase emergency fallback</td></tr>
@@ -568,7 +579,7 @@
     <tr><td>Remote workstation inaccessible for unlock</td><td>dracut-sshd: SSH into initramfs from GrapheneOS</td></tr>
     <tr><td>DNS traffic leakage and exfiltration</td><td>AdGuard Home filtering; systemd-resolved bound to loopback</td></tr>
     <tr><td>Traffic interception and geolocation</td><td>WireGuard VPN on all external traffic with kill-switch</td></tr>
-  </table>
+  </table></div>
 
   <div class="section-break"><span>Components</span></div>
 
