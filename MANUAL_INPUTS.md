@@ -100,4 +100,4 @@ Plus a DNS-leak test result (date + service used) for the **line-79** placeholde
 - [ ] WireGuard excerpt (secrets redacted) → network-stack.md §WireGuard; kill-switch → :49
 - [ ] AdGuard upstream + blocklists → network-stack.md :27 / :20
 - [ ] DNS-leak result → network-stack.md:79; Fedora/kernel → luks2-setup.md:88
-- [ ] Re-run the privacy/`rootdrift` scan, commit per the standing convention, push.
+- [ ] Re-run the privacy / handle-typo scan, commit per the standing convention, push.
