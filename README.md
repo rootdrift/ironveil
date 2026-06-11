@@ -198,9 +198,9 @@ not present on the machine in any form.
 | Build platform | Fedora 44, kernel `7.0.11-200.fc44.x86_64` |
 | OpenRGB (Razer + Corsair) | Operational — vendor daemons absent |
 
-<!-- MANUAL INPUT REQUIRED: add LUKS2 unlock-latency benchmark data (hardware key vs passphrase) measured on the running machine -->
-<!-- MANUAL INPUT REQUIRED: record the Fedora release and kernel — `cat /etc/fedora-release` and `uname -r` -->
-<!-- MANUAL INPUT REQUIRED: record the dracut-sshd build command and initramfs rebuild trigger — see hardening/dracut-sshd.md (`sudo dracut -f --regenerate-all`) and confirm the config drop-in -->
+<!-- MANUAL INPUT REQUIRED: add LUKS2 unlock-latency benchmark data (hardware key vs passphrase) measured on the running machine — not captured in the 2026-06-11 hardware session -->
+<!-- Fedora release + kernel: RESOLVED 2026-06-11 (Fedora 44, 7.0.11-200.fc44.x86_64 — see Build platform row above). -->
+<!-- dracut-sshd build + config drop-in: RESOLVED 2026-06-11 — documented in hardening/dracut-sshd.md (v0.7.1-5.fc44; systemd-networkd + fido2 modules; rebuild via `sudo dracut -f --regenerate-all`). -->
 
 ---
 
