@@ -573,11 +573,11 @@
 
   <div class="info">
     <span class="info-label">LUKS2 Full-Disk Encryption</span>
-    Encrypted volume: <code>/dev/sda3</code>. Three keyslots: Slot 0 (passphrase — emergency
-    fallback only, stored offline), Slot 1 (Nitrokey NK#1 — daily driver, touch required),
-    Slot 2 (Nitrokey NK#2 — kept offline, activated if NK#1 is lost). LUKS2 uses Argon2id
-    as the key derivation function. Hardware key slots enroll FIDO2 credentials — the
-    passphrase is never sent to the key.
+    Encrypted volume: LUKS2 container UUID <code>6cbc50ba-&hellip;</code>
+    (<code>aes-xts-plain64</code>, 512-bit). Three keyslots: Slot 0 (passphrase, Argon2id —
+    emergency fallback, stored offline), Slot 1 (primary Nitrokey 3A NFC — daily driver, touch
+    required), Slot 2 (backup Nitrokey 3A NFC — kept offline). The FIDO2 slots derive via
+    PBKDF2/SHA-512 with the Nitrokey credential — the passphrase is never sent to the key.
   </div>
 
   <div class="info">
@@ -599,20 +599,23 @@
   </div>
 
   <div class="info">
-    <span class="info-label">WireGuard VPN — wg-SE-RO-1</span>
-    Interface: <code>wg-SE-RO-1</code> (named-tunnel model encoding endpoint region).
-    Managed by NetworkManager as a first-class network connection. All external traffic
-    routed through the tunnel. Kill-switch rule drops traffic if the interface drops.
-    The rename from <code>wg0</code> reflects a move toward multi-tunnel readability.
+    <span class="info-label">WireGuard VPN — wg-CH-FI-2 &amp; wg-SE-FI-1</span>
+    Two NetworkManager tunnels: <code>wg-CH-FI-2</code> (endpoint 79.135.104.69:51820) and
+    <code>wg-SE-FI-1</code> (185.159.156.27:51820), each with full-tunnel
+    <code>AllowedIPs 0.0.0.0/0, ::/0</code> and a 25 s keepalive. Activation is manual
+    (<code>autoconnect=false</code>). Full-tunnel routing is a route-based (implicit) kill-switch
+    — a hard fail-closed rule is planned. The named-tunnel model encodes endpoint region.
   </div>
 
   <div class="info">
     <span class="info-label">AdGuard Home DNS Filtering</span>
-    Upstream DNS: WireGuard peer at <code>10.2.0.1</code> — DNS queries traverse the
-    encrypted tunnel before reaching a resolver. Listener: <code>127.0.0.1:53</code>.
-    <code>systemd-resolved</code> configured to forward all queries to <code>127.0.0.1</code>.
-    DNS chain: application → systemd-resolved (loopback) → AdGuard Home → WireGuard →
-    upstream resolver. External observer sees only WireGuard-encrypted traffic.
+    Upstream: <strong>Quad9 over DNS-over-HTTPS</strong>
+    (<code>https://dns10.quad9.net/dns-query</code>) — every query leaves AdGuard already
+    encrypted, then egresses through the active WireGuard tunnel. Listener: <code>*:53</code>
+    (pid 1452), AdGuard is the system resolver; <code>systemd-resolved</code> forwards to it.
+    Block list: AdGuard DNS filter. DNS chain: application → systemd-resolved (127.0.0.1) →
+    AdGuard Home (:53) → Quad9 DoH → active WireGuard tunnel. External observer sees only
+    WireGuard-encrypted traffic. (The provider pushes <code>10.2.0.1</code>; AdGuard overrides it.)
   </div>
 
   <div class="info">
@@ -632,7 +635,7 @@
     </div>
     <div class="layer-row">
       <div class="layer-name">Disk</div>
-      <div class="layer-body">LUKS2 volume on <code style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent)">/dev/sda3</code> with Argon2id KDF</div>
+      <div class="layer-body">LUKS2 <code style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent)">aes-xts-plain64</code>/512-bit (UUID <code style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent)">6cbc50ba-…</code>), Argon2id passphrase slot</div>
       <div class="layer-threat">Offline disk clone and brute-force key derivation</div>
     </div>
     <div class="layer-row">
@@ -647,12 +650,12 @@
     </div>
     <div class="layer-row">
       <div class="layer-name">Network</div>
-      <div class="layer-body">WireGuard <code style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent)">wg-SE-RO-1</code> (NetworkManager) with kill-switch</div>
+      <div class="layer-body">WireGuard <code style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent)">wg-CH-FI-2</code> / <code style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent)">wg-SE-FI-1</code> (NetworkManager, manual), full-tunnel routing</div>
       <div class="layer-threat">Traffic interception, geolocation, leakage if tunnel drops</div>
     </div>
     <div class="layer-row">
       <div class="layer-name">DNS</div>
-      <div class="layer-body">AdGuard Home on <code style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent)">127.0.0.1:53</code> + systemd-resolved loopback; upstream via <code style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent)">10.2.0.1</code> over WireGuard</div>
+      <div class="layer-body">AdGuard Home on <code style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent)">*:53</code> → Quad9 DoH (<code style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent)">dns10.quad9.net</code>) over the active tunnel; systemd-resolved forwards to it</div>
       <div class="layer-threat">Plaintext DNS leakage; tracker and malicious domain resolution</div>
     </div>
   </div>
@@ -664,8 +667,8 @@
   <div class="ctrl-list">
     <div class="ctrl-item">
       <button class="ctrl-head" aria-expanded="false">
-        <span class="status-tag tag-done">Operational</span>
-        <span class="ctrl-name"><strong>LUKS2 Argon2id full-disk encryption</strong> &mdash; all three keyslots active</span>
+        <span class="status-tag tag-done">Verified</span>
+        <span class="ctrl-name"><strong>LUKS2 full-disk encryption</strong> &mdash; aes-xts-plain64, 512-bit, Argon2id + 2&times; FIDO2 (3 keyslots)</span>
         <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
       </button>
       <div class="ctrl-body">
@@ -675,8 +678,8 @@
     </div>
     <div class="ctrl-item">
       <button class="ctrl-head" aria-expanded="false">
-        <span class="status-tag tag-done">Operational</span>
-        <span class="ctrl-name"><strong>Nitrokey NK#1 FIDO2 enrollment</strong> &mdash; firmware 1.8.3, touch-only</span>
+        <span class="status-tag tag-done">Verified</span>
+        <span class="ctrl-name"><strong>Nitrokey 3A NFC FIDO2</strong> &mdash; 2 tokens enrolled, touch-only (up=true), no clientPin</span>
         <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
       </button>
       <div class="ctrl-body">
@@ -697,8 +700,8 @@
     </div>
     <div class="ctrl-item">
       <button class="ctrl-head" aria-expanded="false">
-        <span class="status-tag tag-done">Operational</span>
-        <span class="ctrl-name"><strong>dracut-sshd remote unlock</strong> &mdash; Termux ed25519 key in initramfs</span>
+        <span class="status-tag tag-done">Verified</span>
+        <span class="ctrl-name"><strong>dracut-sshd remote unlock</strong> &mdash; v0.7.1-5.fc44; systemd-networkd + fido2 initramfs modules</span>
         <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
       </button>
       <div class="ctrl-body">
@@ -708,24 +711,24 @@
     </div>
     <div class="ctrl-item">
       <button class="ctrl-head" aria-expanded="false">
-        <span class="status-tag tag-done">Operational</span>
-        <span class="ctrl-name"><strong>WireGuard wg-SE-RO-1</strong> &mdash; NetworkManager-managed</span>
+        <span class="status-tag tag-done">Verified</span>
+        <span class="ctrl-name"><strong>WireGuard wg-CH-FI-2 + wg-SE-FI-1</strong> &mdash; NetworkManager, manual, full-tunnel routing</span>
         <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
       </button>
       <div class="ctrl-body">
         <span class="protects">Protects against</span>
-        <p>Traffic interception and geolocation. All external traffic is routed through the tunnel; the kill-switch drops traffic if the interface drops rather than failing open.</p>
+        <p>Traffic interception and geolocation. Both tunnels carry full-tunnel <code>AllowedIPs</code> (0.0.0.0/0, ::/0), so the active tunnel is the default route for all traffic &mdash; a route-based (implicit) kill-switch. A separate fail-closed rule is planned; tunnels are manually activated (autoconnect=false).</p>
       </div>
     </div>
     <div class="ctrl-item">
       <button class="ctrl-head" aria-expanded="false">
-        <span class="status-tag tag-done">Operational</span>
-        <span class="ctrl-name"><strong>AdGuard Home DNS filtering</strong> &mdash; upstream via 10.2.0.1</span>
+        <span class="status-tag tag-done">Verified</span>
+        <span class="ctrl-name"><strong>AdGuard Home DNS filtering</strong> &mdash; Quad9 DoH upstream, *:53, AdGuard DNS filter, egress via tunnel</span>
         <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
       </button>
       <div class="ctrl-body">
         <span class="protects">Protects against</span>
-        <p>Plaintext DNS leakage and tracker / malicious-domain resolution. Queries traverse the WireGuard tunnel to the upstream resolver &mdash; an external observer sees only encrypted tunnel traffic.</p>
+        <p>Plaintext DNS leakage and tracker / malicious-domain resolution. AdGuard's only upstream is Quad9 over DNS-over-HTTPS, so queries leave already encrypted and egress through the active WireGuard tunnel &mdash; an external observer sees only encrypted tunnel traffic. (Listener is *:53, not loopback-only; the guarantee rests on the DoH-over-tunnel upstream, verified 2026-06-11 via wg-CH-FI-2.)</p>
       </div>
     </div>
     <div class="ctrl-item">
@@ -752,24 +755,24 @@
     </div>
     <div class="ctrl-item">
       <button class="ctrl-head" aria-expanded="false">
-        <span class="status-tag tag-pending">Manual Input</span>
-        <span class="ctrl-name"><strong>LUKS2 exact cipher + key size</strong> &mdash; run: <code>sudo cryptsetup luksDump /dev/sda3</code></span>
+        <span class="status-tag tag-done">Verified</span>
+        <span class="ctrl-name"><strong>LUKS2 cipher + key size</strong> &mdash; aes-xts-plain64, 512-bit (UUID 6cbc50ba-…)</span>
         <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
       </button>
       <div class="ctrl-body">
-        <span class="protects pending">Pending &mdash; to resolve</span>
-        <p>Value must be read from the running machine and will be published once captured. An honest gap beats invented completeness.</p>
+        <span class="protects">Verified 2026-06-11</span>
+        <p>Captured via <code>cryptsetup luksDump</code>: aes-xts-plain64, 512-bit key, 3 active keyslots (slot 0 Argon2id passphrase; slots 1&ndash;2 PBKDF2/SHA-512 FIDO2).</p>
       </div>
     </div>
     <div class="ctrl-item">
       <button class="ctrl-head" aria-expanded="false">
-        <span class="status-tag tag-pending">Manual Input</span>
-        <span class="ctrl-name"><strong>Fedora release + kernel</strong> &mdash; run: <code>cat /etc/fedora-release &amp;&amp; uname -r</code></span>
+        <span class="status-tag tag-done">Verified</span>
+        <span class="ctrl-name"><strong>Build platform</strong> &mdash; Fedora 44, kernel 7.0.11-200.fc44.x86_64</span>
         <span class="ctrl-chev" aria-hidden="true">&#9656;</span>
       </button>
       <div class="ctrl-body">
-        <span class="protects pending">Pending &mdash; to resolve</span>
-        <p>Captured from the running machine in a hardware session; recorded here once verified.</p>
+        <span class="protects">Verified 2026-06-11</span>
+        <p>Fedora release 44 (Forty Four), kernel <code>7.0.11-200.fc44.x86_64</code>.</p>
       </div>
     </div>
     <div class="ctrl-item">
