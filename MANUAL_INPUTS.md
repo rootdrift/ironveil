@@ -132,9 +132,22 @@ Plus a DNS-leak test result (date + service used) for the **line-79** placeholde
 - **Kill-switch:** route-based (full-tunnel `AllowedIPs`), not a fail-closed rule; tunnels are
   `autoconnect=false` (manual). Flagged a hard kill-switch as FUTURE WORK.
 
-### Still pending (no value provided this session)
-- LUKS2 unlock-latency benchmark (hardware-key vs passphrase).
-- SELinux/seccomp status (`getenforce` / `sestatus`).
-- LUKS2 verified-boot hash + Fedora Secure Boot state (`mokutil --sb-state`).
-- OpenRGB profile name + udev rule path (README.md OpenRGB markers).
-- dracut-sshd package origin (official Fedora vs COPR) via `rpm -qi dracut-sshd`.
+### Optional values RESOLVED 2026-06-12 (checked from war-horse — the ironveil host; LUKS UUID prefix `6cbc50ba` matched)
+- [x] **SELinux/seccomp status** → `hardening/os-hardening.md`: SELinux `enforcing`/`targeted`, MLS
+  compiled; seccomp `CONFIG_SECCOMP_FILTER=y`; Yama `ptrace_scope=0` (Fedora default, flagged as
+  FUTURE WORK to raise to 1). README marker resolved + Results rows added.
+- [x] **Secure Boot state** → `mokutil --sb-state` = **disabled / Setup Mode** (no PK enrolled).
+  Documented honestly in `os-hardening.md` + README: confidentiality rests on FDE+FIDO2, not Secure
+  Boot; SB enrolment + TPM2 PCR sealing tracked as FUTURE WORK to close the evil-maid gap.
+- [x] **dracut-sshd package origin** → **official Fedora repo** (Vendor/Packager Fedora Project;
+  `from_repo=fedora`), not COPR. `hardening/dracut-sshd.md` updated.
+- [x] **OpenRGB udev rule path** → `/usr/lib/udev/rules.d/60-openrgb.rules` (OpenRGB 0.9+ git).
+  README marker resolved.
+- [x] **Fedora/kernel re-verify** → Fedora 44, `7.0.11-200.fc44.x86_64`, cmdline `rootflags=subvol=root`
+  (Btrfs) + `rd.luks.uuid=luks-6cbc50ba…` — matches documented, **no drift**.
+
+### Still genuinely pending (need hardware interaction / operator)
+- LUKS2 unlock-latency benchmark (hardware-key vs passphrase) — needs a timed reboot.
+- OpenRGB saved **profile name** + colour scheme — needs the OpenRGB GUI (udev path now known).
+- LUKS2 verified-boot hash — N/A while Secure Boot is disabled (no UEFI measured-boot chain to hash);
+  becomes relevant only after the Secure Boot + TPM2 FUTURE WORK above is done.

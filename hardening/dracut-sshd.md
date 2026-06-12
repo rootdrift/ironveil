@@ -13,9 +13,20 @@ carries the `fido2` module, so a Nitrokey touch can unlock directly at the promp
 
 ## Installation
 
-Installed version: **`dracut-sshd-0.7.1-5.fc44.noarch`** (packaged for Fedora 44 — the `.fc44`
-dist tag). The exact origin (official Fedora repo vs the upstream COPR) was not captured in the
-hardware session; confirm with `rpm -qi dracut-sshd` (the *From repo* / *Vendor* fields).
+Installed version: **`dracut-sshd-0.7.1-5.fc44.noarch`**, from the **official Fedora repository**
+— *not* the upstream COPR. Confirmed 2026-06-12:
+
+```
+$ rpm -qi dracut-sshd | grep -E 'Vendor|Packager|Source RPM'
+Source RPM  : dracut-sshd-0.7.1-5.fc44.src.rpm
+Packager    : Fedora Project
+Vendor      : Fedora Project
+$ dnf repoquery --installed --qf '%{name} from_repo=%{from_repo}' dracut-sshd
+dracut-sshd from_repo=fedora
+```
+
+Using the distribution package (rather than COPR) means the module inherits Fedora's signing and
+update path — relevant for a build whose pre-boot SSH surface must stay patched.
 
 ```
 # Install the dracut-sshd module

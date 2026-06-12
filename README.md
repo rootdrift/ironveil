@@ -149,7 +149,7 @@ non-root HID access, and verification commands — is documented in
 [hardening/openrgb-setup.md](hardening/openrgb-setup.md).
 
 <!-- MANUAL INPUT REQUIRED: record the saved OpenRGB profile name and colour scheme from the OpenRGB GUI -->
-<!-- MANUAL INPUT REQUIRED: record the udev rule enabling non-root OpenRGB HID access (OpenRGB ships 60-openrgb.rules; confirm the installed path under /usr/lib/udev/rules.d/) -->
+<!-- OpenRGB udev rule: RESOLVED 2026-06-12 — OpenRGB 0.9+ (git) installed; HID access rule at /usr/lib/udev/rules.d/60-openrgb.rules (confirmed present). Saved profile NAME still to capture from the GUI (line above). -->
 
 ---
 
@@ -179,8 +179,21 @@ The hardware key is the root of the trust chain. Without a Nitrokey or the emerg
 passphrase, the disk does not open. The emergency passphrase is stored offline and is
 not present on the machine in any form.
 
-<!-- FUTURE WORK: document TPM integration if Measured Boot is added in a future iteration (current build does not bind unlock to PCR measurements — see hardening/research/luks2-fido2-reference.md §5) -->
-<!-- MANUAL INPUT REQUIRED: record the SELinux/seccomp policy status — run `getenforce` and `sestatus` (Fedora ships SELinux enforcing by default; confirm) -->
+### Host Hardening — MAC, seccomp, boot integrity
+
+Above the disk and network layers, the host runs **SELinux in `enforcing`/`targeted` mode**
+(deliberately not disabled), with **seccomp BPF filtering compiled into the kernel**
+(`CONFIG_SECCOMP_FILTER=y`) for systemd service sandboxing. Two controls are documented as
+**honest gaps** rather than hidden: Yama `ptrace_scope` is at the Fedora default `0` (tightening
+to `1` is planned), and **UEFI Secure Boot is currently disabled / in Setup Mode** — the build's
+unlock-integrity guarantee rests on LUKS2 + touch-only FIDO2 + a pinned initramfs host key, not on
+Secure Boot. Full detail, command output, and the planned next moves (ptrace tightening; Secure
+Boot + TPM2 PCR sealing to close the evil-maid gap) are in
+[hardening/os-hardening.md](hardening/os-hardening.md).
+
+> Measured Boot note: the current build does not bind the LUKS unlock to TPM PCR measurements
+> (see [hardening/research/luks2-fido2-reference.md](hardening/research/luks2-fido2-reference.md)
+> §5). This is tracked as FUTURE WORK alongside the Secure Boot enrolment above.
 
 ---
 
@@ -196,7 +209,10 @@ not present on the machine in any form.
 | AdGuard Home | Operational — Quad9 DoH upstream, `*:53`, AdGuard DNS filter |
 | systemd-resolved → 127.0.0.1 | Operational |
 | Build platform | Fedora 44, kernel `7.0.11-200.fc44.x86_64` |
-| OpenRGB (Razer + Corsair) | Operational — vendor daemons absent |
+| SELinux | Enforcing — `targeted` policy, MLS compiled |
+| seccomp | Available — `CONFIG_SECCOMP_FILTER=y` (systemd sandboxing) |
+| UEFI Secure Boot | Disabled / Setup Mode — honest gap, FUTURE WORK |
+| OpenRGB (Razer + Corsair) | Operational — vendor daemons absent (udev `60-openrgb.rules`) |
 
 <!-- MANUAL INPUT REQUIRED: add LUKS2 unlock-latency benchmark data (hardware key vs passphrase) measured on the running machine — not captured in the 2026-06-11 hardware session -->
 <!-- Fedora release + kernel: RESOLVED 2026-06-11 (Fedora 44, 7.0.11-200.fc44.x86_64 — see Build platform row above). -->
